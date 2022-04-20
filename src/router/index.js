@@ -1,23 +1,35 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import store from "@/store";
 
 Vue.use(VueRouter);
 
 const routes = [
   {
     path: "/",
-    name: "home",
-    component: HomeView,
+    name: "ProductView",
+    component: () =>
+      import(/* webpackChunkName: "ProductList" */ "../views/ProductView.vue"),
   },
   {
-    path: "/about",
-    name: "about",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
+    path: "/cart",
+    name: "CartView",
+    meta: { requiresAuth: true },
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+      import(/* webpackChunkName: "CartView" */ "../views/CartView.vue"),
+  },
+  {
+    path: "/login",
+    name: "LoginView",
+    component: () =>
+      import(/* webpackChunkName: "LoginView" */ "../views/LoginView.vue"),
+  },
+  {
+    path: "/404",
+    alias: "*",
+    name: "NotFound",
+    component: () =>
+      import(/* webpackChunkName: "NotFound" */ "../views/NotFound.vue"),
   },
 ];
 
@@ -25,6 +37,18 @@ const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!store.state.user) {
+      next({ name: "LoginView" });
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
 });
 
 export default router;
